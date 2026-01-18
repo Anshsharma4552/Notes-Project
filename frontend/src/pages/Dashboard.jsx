@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiPlus, FiSearch, FiFilter, FiX } from 'react-icons/fi';
+import { FiPlus, FiSearch, FiX } from 'react-icons/fi';
 import { useNotes } from '../hooks/useNotes';
 import NoteCard from '../components/NoteCard';
 import Modal from '../components/Modal';
 import NoteForm from '../components/NoteForm';
 import { NoteCardSkeleton } from '../components/Skeleton';
+import { useCursor } from '../context/CursorContext';
 
 const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,6 +18,7 @@ const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingNote, setEditingNote] = useState(null);
   const navigate = useNavigate();
+  const { textCursor, pointerCursor } = useCursor();
 
   const filters = {
     sort: sortBy,
@@ -62,25 +64,27 @@ const Dashboard = () => {
   const allTags = [...new Set(notes.flatMap((note) => note.tags || []))];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background pb-20">
+      <div className="container mx-auto px-6 py-8">
         {/* Search and Filters */}
-        <div className="mb-8 space-y-4">
+        <div className="mb-10 space-y-6">
           <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <div className="relative flex-1 group">
+              <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-black w-5 h-5 group-hover:scale-110 transition-transform" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search notes..."
-                className="input-field pl-10"
+                className="w-full bg-white border-2 border-transparent focus:border-white shadow-[0_0_15px_rgba(255,255,255,0.1)] rounded-xl px-12 py-3 text-black placeholder-gray-500 focus:outline-none focus:ring-0 transition-all duration-300 font-medium"
+                {...textCursor}
               />
             </div>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="input-field"
+              className="bg-white border-2 border-transparent focus:border-white shadow-[0_0_15px_rgba(255,255,255,0.1)] rounded-xl px-6 py-3 text-black font-medium focus:outline-none focus:ring-0 appearance-none cursor-pointer hover:shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all min-w-[160px]"
+              {...pointerCursor}
             >
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>
@@ -90,31 +94,33 @@ const Dashboard = () => {
           </div>
 
           {/* Filter Chips */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-sm text-primary-dim mr-2 font-medium">Filters:</span>
             <button
               onClick={() => setShowPinned(!showPinned)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                showPinned
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-              }`}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 border ${showPinned
+                ? 'bg-white text-black border-white'
+                : 'bg-surface border-border text-primary-muted hover:border-white hover:text-white'
+                }`}
+              {...pointerCursor}
             >
               Pinned
             </button>
             <button
               onClick={() => setShowFavorites(!showFavorites)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                showFavorites
-                  ? 'bg-yellow-500 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-              }`}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 border ${showFavorites
+                ? 'bg-white text-black border-white'
+                : 'bg-surface border-border text-primary-muted hover:border-white hover:text-white'
+                }`}
+              {...pointerCursor}
             >
               Favorites
             </button>
             {filterTag && (
               <button
                 onClick={() => setFilterTag('')}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-primary-600 text-white flex items-center space-x-1"
+                className="px-4 py-2 rounded-full text-sm font-medium bg-white text-black border border-white flex items-center space-x-1 hover:bg-gray-200 transition-colors"
+                {...pointerCursor}
               >
                 <span>{filterTag}</span>
                 <FiX className="w-4 h-4" />
@@ -124,13 +130,13 @@ const Dashboard = () => {
               <button
                 key={tag}
                 onClick={() => setFilterTag(tag)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  filterTag === tag
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                }`}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 border ${filterTag === tag
+                  ? 'bg-white text-black border-white'
+                  : 'bg-surface border-border text-primary-muted hover:border-white hover:text-white'
+                  }`}
+                {...pointerCursor}
               >
-                {tag}
+                #{tag}
               </button>
             ))}
           </div>
@@ -138,26 +144,29 @@ const Dashboard = () => {
 
         {/* Notes Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
               <NoteCardSkeleton key={i} />
             ))}
           </div>
         ) : notes.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="text-6xl mb-4">📝</div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          <div className="text-center py-32 flex flex-col items-center justify-center">
+            <div className="w-24 h-24 bg-surface border border-border rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+              <span className="text-6xl font-bold text-white">N</span>
+            </div>
+            <h2 className="text-3xl font-bold text-white mb-3">
               No notes yet
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-primary-muted mb-8 max-w-sm">
               {searchQuery || filterTag || showFavorites || showPinned
-                ? 'Try adjusting your filters'
-                : 'Create your first note to get started'}
+                ? 'Try adjusting your filters to find what you are looking for.'
+                : 'Capture your thoughts, ideas, and reminders. Create your first note to get started.'}
             </p>
             {!searchQuery && !filterTag && !showFavorites && !showPinned && (
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="btn-primary"
+                className="px-8 py-3 bg-white text-black font-semibold rounded-full hover:scale-105 transition-transform duration-300 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+                {...pointerCursor}
               >
                 Create Note
               </button>
@@ -166,7 +175,7 @@ const Dashboard = () => {
         ) : (
           <motion.div
             layout
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-fr"
           >
             <AnimatePresence>
               {notes.map((note) => (
@@ -190,10 +199,11 @@ const Dashboard = () => {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-8 right-8 w-14 h-14 bg-primary-600 hover:bg-primary-700 text-white rounded-full shadow-lg flex items-center justify-center z-40 transition-colors"
+        className="fixed bottom-10 right-10 w-16 h-16 bg-white text-black rounded-full shadow-[0_0_30px_rgba(255,255,255,0.2)] flex items-center justify-center z-40 transition-all hover:bg-gray-100"
         aria-label="Add new note"
+        {...pointerCursor}
       >
-        <FiPlus className="w-6 h-6" />
+        <FiPlus className="w-8 h-8" />
       </motion.button>
 
       {/* Create/Edit Note Modal */}
@@ -213,4 +223,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

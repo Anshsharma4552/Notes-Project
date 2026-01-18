@@ -16,6 +16,26 @@ const noteSchema = new mongoose.Schema({
     required: [true, 'Content is required'],
     maxlength: [50000, 'Content cannot exceed 50000 characters']
   },
+  type: {
+    type: String,
+    enum: ['text', 'checklist'],
+    default: 'text'
+  },
+  checklist: [{
+    text: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    isComplete: {
+      type: Boolean,
+      default: false
+    }
+  }],
+  reminder: {
+    type: Date,
+    default: null
+  },
   tags: [{
     type: String,
     trim: true,
@@ -55,7 +75,7 @@ noteSchema.index({ title: 'text', content: 'text' }); // Text search
 /**
  * Remove userId from JSON output (optional, for cleaner API responses)
  */
-noteSchema.methods.toJSON = function() {
+noteSchema.methods.toJSON = function () {
   const obj = this.toObject();
   // Keep userId for frontend use, but you can remove it if needed
   return obj;
