@@ -4,7 +4,7 @@ const { body } = require('express-validator');
 const {
   register,
   login,
-  login,
+
   getMe,
   uploadAvatar
 } = require('../controllers/authController');
